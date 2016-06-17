@@ -1,0 +1,9 @@
+*.pyc
+*~
+.idea
+_dev
+*.log
+*.eggs
+*.data
+*.ini
+
