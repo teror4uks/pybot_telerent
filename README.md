@@ -13,7 +13,7 @@ After create in folder your scripts "settings.ini" and write sections "DEFAULT" 
 * TRANSMISSION_LOGIN = <LOGIN TRANSMISSION>
 * TRANSMISSION_PASS =  <PASSWORD TRANSMISSION>
 
- ** Save and exit **
+## Save and exit
 
 Then run pybot_telerent:
 *  $ python3 daemon_bot.py
