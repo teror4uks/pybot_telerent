@@ -33,21 +33,10 @@ class MyDaemonBot:
     def __init__(self):
         self.from_id = 'None'
         self.text = 'None'
-        self.my_time = time
-        self.request = None
-        self.data = None
-        self.name = None
-        self.message = None
-        self.result = None
         self.success = 'success'  # res = 0
         self.duplicate = 'duplicate'  # res = 1
         self.invalid = 'invalid'  # res = 2
-        self.output = None
-        self.p1 = None
-        self.res = None
         self.path = os.path.dirname(os.path.abspath(__file__))
-        self.event = None
-        self.chat_id = None
         self.log = logging.getLogger('RutackerBot')
         self.log.setLevel(logging.DEBUG)
         self.fh = logging.FileHandler('ham.log')
@@ -79,22 +68,22 @@ class MyDaemonBot:
         self.log.info('Exit bot')
 
     def check_updates(self):
-        self.data = {'offset': MyDaemonBot.offset + 1, 'limit': 5, 'timeout': 0}  # request
+        data = {'offset': MyDaemonBot.offset + 1, 'limit': 5, 'timeout': 0}  # request
 
-        self.request = requests.post(MyDaemonBot.URL + MyDaemonBot.TOKEN + '/getUpdates', data=self.data)  # chek update
+        request = requests.post(MyDaemonBot.URL + MyDaemonBot.TOKEN + '/getUpdates', data=data)  # chek update
 
-        if not self.request.status_code == 200:
-            self.data = None
+        if not request.status_code == 200:
+            data = None
             return False
 
         # if response 'OK' that all ok :)
-        if not self.request.json()['ok']:
-            self.data = None
+        if not request.json()['ok']:
+            data = None
             return False
 
-        self.data = None
+        data = None
 
-        for update in self.request.json()['result']:  # Check element list
+        for update in request.json()['result']:  # Check element list
             MyDaemonBot.offset = update['update_id']  # Id messages
 
             # If in update not messages or in messages not test then pass
@@ -102,17 +91,17 @@ class MyDaemonBot:
                 self.log.error('Unknown update: {0}'.format(update))
                 continue
 
-            self.from_id = update['message']['chat']['id']  # Check id chat who send messages
-            self.name = update['message']['chat']['username']  # Check username who send messages
+            from_id = update['message']['chat']['id']  # Check id chat who send messages
+            name = update['message']['chat']['username']  # Check username who send messages
 
-            if self.from_id != MyDaemonBot.ADMIN_ID:  # if not admin
-                self.send_text(self.from_id, "You're not authorized to use me!")
+            if from_id != MyDaemonBot.ADMIN_ID:  # if not admin
+                self.send_text(from_id, "You're not authorized to use me!")
                 self.log.error('not authorized user: '.format(update))
                 continue
 
-            self.message = update['message']['text']  # Check message
+            message = update['message']['text']  # Check message
 
-            parameters = (MyDaemonBot.offset, self.name, self.from_id, self.message)
+            parameters = (MyDaemonBot.offset, name, from_id, message)
 
             self.log.info('Message (id{0}) from {1} (id{2}): "{3}"'.format(*parameters))
             self.run_command(*parameters)
@@ -126,18 +115,18 @@ class MyDaemonBot:
 
         elif MyDaemonBot.MAGNET in cmd:  # add torrent
             self.send_text(from_id, 'try add torrent from magnet url')
-            self.result = self.add_torrent(cmd)
+            result = self.add_torrent(cmd)
 
-            if self.result == 0:
+            if result == 0:
                 self.send_text(from_id, 'torrent add success')
 
-            elif self.result == 1:
+            elif result == 1:
                 self.send_text(from_id, 'duplicate torrent')
 
-            elif self.result == 2:
+            elif result == 2:
                 self.send_text(from_id, 'invalid torrent')
 
-            elif self.result == 3:
+            elif result == 3:
                 self.send_text(from_id, 'unknown error')
         else:
             self.send_text(from_id, 'Got it.')  # send answer
@@ -147,56 +136,50 @@ class MyDaemonBot:
         # example duplicate torrent: Error: duplicate torrent
         # example invalid or corrupt torrent: Error: invalid or corrupt torrent file
 
-        self.res = -1
+        res = -1
         self.text = text
         try:
-            self.p1 = subprocess.Popen(["transmission-remote", "-n",
+            p1 = subprocess.Popen(["transmission-remote", "-n",
                                         MyDaemonBot.TRANSMISSION_LOGIN+":"+MyDaemonBot.TRANSMISSION_PASS, "-a",
                                         self.text],
                                        stdout=subprocess.PIPE).communicate()[0]
         except:
-            print('error transmission remote')
-            self.res = 2
-            return self.res
+            self.log.error('error transmission remote')
+            res = 2
+            return res
 
-        self.output = self.p1.decode('utf-8')
-        if self.success in self.output:
-            self.res = 0
-            return self.res
+        output = p1.decode('utf-8')
+        if self.success in output:
+            res = 0
+            return res
 
-        elif self.duplicate in self.output:
-            self.res = 1
-            return self.res
+        elif self.duplicate in output:
+            res = 1
+            return res
 
-        elif self.invalid in self.output:
-            self.res = 2
-            return self.res
+        elif self.invalid in output:
+            res = 2
+            return res
 
         else:
-            self.res = 3  # res = 3 unknown result
-            return self.res
-
-    def log_event(self, text):
-        self.event = None
-        self.text = text
-        self.event = '{0} >> {1}'.format(time.ctime(), self.text)
-        print(self.event)
+            res = 3  # res = 3 unknown result
+            return res
 
     def send_text(self, chat_id, text):
         """ send test to chat_id
         ToDo: repeat if failed
         :param text: type string
         :param chat_id: type int id chat"""
-        self.chat_id = chat_id
+        #self.chat_id = chat_id
         self.text = text
-        self.log.info('Sending to {0}: {1}'.format(chat_id, self.text))
-        self.data = {'chat_id': chat_id, 'text': text}
-        request = requests.post(MyDaemonBot.URL + MyDaemonBot.TOKEN + '/sendMessage', data=self.data)
+        self.log.info('Sending to {0}: {1}'.format(chat_id, text))
+        data = {'chat_id': chat_id, 'text': text}
+        request = requests.post(MyDaemonBot.URL + MyDaemonBot.TOKEN + '/sendMessage', data=data)
         if not request.status_code == 200:
-            self.data = None
+            #data = None
             return False
 
-        self.data = None
+        #data = None
         return request.json()['ok']
 
     def __str__(self):
