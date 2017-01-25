@@ -6,22 +6,24 @@ After create in folder your scripts "settings.ini" and write sections "DEFAULT" 
 
 [DEFAULT]
 
-INTERVAL = 3
-ADMIN_ID = <ID>
-URL = https://api.telegram.org/bot
-TOKEN = <YOUR TOKEN BOT>
-TRANSMISSION_LOGIN = <LOGIN TRANSMISSION>
-TRANSMISSION_PASS =  <PASSWORD TRANSMISSION>
+* INTERVAL = 3
+* ADMIN_ID = <ID>
+* URL = https://api.telegram.org/bot
+* TOKEN = <YOUR TOKEN BOT>
+* TRANSMISSION_LOGIN = <LOGIN TRANSMISSION>
+* TRANSMISSION_PASS =  <PASSWORD TRANSMISSION>
 
-Save and exit
+ ** Save and exit **
 
 Then run pybot_telerent:
-  $ python3 daemon_bot.py
+*  $ python3 daemon_bot.py
+
 check your working bot:
-  $ ps aux | grep daemon_bot
+*  $ ps aux | grep daemon_bot
 kill your bot:
-  $ kill <PID>
+*  $ kill <PID>
+
 log in folder bot:
-  $ tail -f ham.log
+*  $ tail -f ham.log
 
 
